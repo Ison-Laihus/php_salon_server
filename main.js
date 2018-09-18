@@ -98,7 +98,7 @@ router.post('/login', async (ctx, next) => {
     console.log(ctx.request.username);
     console.log(ctx.request);
     console.log(ctx.body);
-    console.log(ctx.data); 
+    console.log(ctx.data);
     // console.log(ctx.req);
 
     await new Promise(function(resolve, reject) {

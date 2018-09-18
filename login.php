@@ -17,6 +17,7 @@ if ( isset($_SERVER['REQUEST_METHOD']) && strtoupper($_SERVER['REQUEST_METHOD'])
                 $ret_json['msg'] = 'login successful';
                 $ret_json['success'] = true;
                 $_SESSION['user'] = $_POST['user_name'];
+                $_SESSION['id'] = $rows[0]['id'];
             } else {
                 $ret_json['err'] = 'password error';
             }

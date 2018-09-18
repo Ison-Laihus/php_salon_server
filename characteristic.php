@@ -7,7 +7,7 @@ if ( isset($_SERVER['REQUEST_METHOD']) && strtoupper($_SERVER['REQUEST_METHOD'])
     require 'connection.php';
 
     try {
-        $sql = 'select * from school';
+        $sql = 'select * from characteristic';
         $db->beginTransaction();
         $stmt = $db->prepare($sql);
         $stmt->execute()
