@@ -1,5 +1,8 @@
 <?php
-sesstion_start();
+$sessionid = $_COOKIE['PHPSESSID'];
+session_id($sessionid);
+session_start();
+
 $ret_json = array('success' => false);
 
 if ( isset($_SERVER['REQUEST_METHOD']) && strtoupper($_SERVER['REQUEST_METHOD'])=='GET' ) {

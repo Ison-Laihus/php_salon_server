@@ -1,4 +1,7 @@
 <?php
+$sessionid = $_COOKIE['PHPSESSID'];
+session_id($sessionid);
+session_start();
 
 $ret_json = array('success' => false);
 
@@ -10,10 +13,9 @@ if ( isset($_SERVER['REQUEST_METHOD']) && strtoupper($_SERVER['REQUEST_METHOD'])
         try {
             $sql = 'select * from progress';
             $db->beginTransaction();
-            $stmt = $db->prepare($sql);
-            $stmt->execute()
+            $stmt = $db->query($sql);
             $arr = [];
-            foreach($rows->fetchAll() as $row) {
+            foreach($stmt->fetchAll() as $row) {
                 array_push($arr, $row);
             }
             $ret_json['success'] = true;

@@ -5,5 +5,7 @@ return $config = array(
     'host' => 'localhost',
     'user' => 'root',
     'pass' => '',
-    'dbname' => 'test'
+    'dbname' => 'test',
+    'salt' => 'salon',
+    'expire' => 3600
 );

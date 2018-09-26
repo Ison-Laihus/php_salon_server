@@ -9,10 +9,10 @@ if ( isset($_SERVER['REQUEST_METHOD']) && strtoupper($_SERVER['REQUEST_METHOD'])
     try {
         $sql = 'select * from characteristic';
         $db->beginTransaction();
-        $stmt = $db->prepare($sql);
-        $stmt->execute()
+        $stmt = $db->query($sql);
+        $db->commit();
         $arr = [];
-        foreach($rows->fetchAll() as $row) {
+        foreach($stmt->fetchAll() as $row) {
             array_push($arr, $row);
         }
         $ret_json['success'] = true;

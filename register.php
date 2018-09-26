@@ -1,4 +1,6 @@
 <?php
+error_reporting(-1);
+ini_set('display_errors', 1);
 
 $ret_json = array('success' => false);
 
@@ -8,28 +10,32 @@ if ( isset($_SERVER['REQUEST_METHOD']) && strtoupper($_SERVER['REQUEST_METHOD'])
         # connect sql
         require 'connection.php';
 
-        $salt = 'salon';
-        // $sql = 'insert into user_account values(0, "' . $post['user_name'] . '", "' . $post['real_name'] . '", "'
-        //         . md5($post['password'] . $salt) . '", ' . $post['school_id'] . ', 0, ' . $post['profession_id'] . ', "'
-        //         . $post['phone'] . '", "' . $post['email'] . '")';
-        $sql = 'insert into user_account values(0, "?", "?", "?", ?, 0, ?, "?", "?")';
-        $stmt = $db->prepare($sql);
+        $characteristic_arr = explode(',', $post['characteristic']);
+        $password = md5($post['password'] . $config['salt']);
+
         try {
+            $sql = 'insert into user_account values (0, ?, ?, ?, ?, 0, ?, ?, ?)';
             $db->beginTransaction();
-            $ret = $stmt->execute(array($post['user_name'], $post['real_name'], md5($post['password'] . $salt), $post['school_id'], $post['profession_id'], $post['phone'], $post['email']));
+            $stmt = $db->prepare($sql);
+            $ret = $stmt->execute(array($post['user_name'], $post['real_name'], $password, $post['school_id'], $post['profession_id'], $post['phone'], $post['email']));
+            $db->commit();
+
             if ($ret) {
                 $id = $db->lastInsertId();
                 $sql2 = 'insert into user_characteristic values(0, ' . $id . ', ?)';
-                for ($i=1; $i<count($post['characteristic']); $i++) {
+                for ($i=1; $i<count($characteristic_arr); $i++) {
                     $sql2 .= ',(0, ' . $id . ', ?)';
                 }
-                $sql2 .= ';'
+
+                $db->beginTransaction();
                 $stmt2 = $db->prepare($sql2);
-                $ret2 = $stmt2->excute($post['characteristic']);
-                if ($ret2) {
-                    $ret_json['msg'] = 'register successful';
-                    $ret_json['success'] = true;
-                }
+                $stmt2->execute($characteristic_arr);
+                $db->commit();
+
+                $ret_json['msg'] = 'register successful';
+                $ret_json['success'] = true;
+            } else {
+                $ret_json['msg'] = 'insert into user_account error';
             }
         } catch(PDOException $e) {
             $db->rollback();
