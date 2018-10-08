@@ -13,12 +13,12 @@ if ( $method && ( $method=='GET' || $method=='POST') ) {
 
         if ($method=='GET') {
             try {
-                $sql = 'select id, title, image_url, date, type, page_views, thumb_number from news';
+                $sql = 'select news.id as id, title, images.url as image_url, date, page_views, thumb_number from (news left join images on news.id = images.item_id)';
                 $db->beginTransaction();
-                $stmt = $db->prepare($sql);
-                $stmt->execute()
+                $stmt = $db->query($sql);
+                $db->commit();
                 $arr = [];
-                foreach($rows->fetchAll() as $row) {
+                foreach($stmt->fetchAll() as $row) {
                     array_push($arr, $row);
                 }
                 $ret_json['success'] = true;
@@ -32,17 +32,22 @@ if ( $method && ( $method=='GET' || $method=='POST') ) {
             if ( $post ) {
                 $title = $post['title'];
                 $content = $post['content'];
-                $date = $post['date'];
-                $type = $post['type'];
-                $sql = 'insert into news values(0, ?, ?, ?, ?, 0, 0)';
+                $sql = 'insert into news values(0, ?, ?, ?, 0, 0, 0)';
+                $date = date('Y-m-d H:i:s');
+                $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 try {
                     $db->beginTransaction();
                     $stmt = $db->prepare($sql);
-                    $ret = $stmt->excute(array($title, $content, $date, $type));
+                    $ret = $stmt->execute(array($title, $content, $date));
+                    $db->commit();
                     if ( $ret ) {
                         $ret_json['success'] = true;
                         $ret_json['msg'] = 'add news successful';
-                        $ret_json['news_id'] = $db->lastInsertId();
+                        # get last insert id
+                        $stmt = $db->query("SELECT LAST_INSERT_ID()");
+                        $lastId = $stmt->fetch(PDO::FETCH_NUM);
+                        $lastId = $lastId[0];
+                        $ret_json['item_id'] = $lastId;
                     } else {
                         $ret_json['err'] = 'add news failed';
                     }

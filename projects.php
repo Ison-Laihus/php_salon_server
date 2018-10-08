@@ -13,12 +13,15 @@ if ( $method && ( $method=='GET' || $method=='POST') ) {
 
         if ($method=='GET') {
             try {
-                $sql = 'select project_name, date, group_number, group_number_now, progress.progress as progress_name, user_account.real_name as user from (projects left join progress on projects.progress_id = progress.id) left join user_account on user_account.id = projects.user_id order by date desc, group_number_now asc';
+                $sql = 'select projects.id as id, project_name, date, group_number, group_number_now, progress.progress as progress_name, user_account.real_name as user from (projects left join progress on projects.progress_id = progress.id) left join user_account on user_account.id = projects.user_id order by date desc, group_number_now asc';
                 $db->beginTransaction();
                 $stmt = $db->query($sql);
                 $db->commit();
                 $arr = [];
                 foreach($stmt->fetchAll() as $row) {
+                    $stmt = $db->query('select url from images where item_id = ' . $row['id'] . ' and type = "projects"');
+                    $tmp_arr = $stmt->fetchAll();
+                    $row['image_url'] = $tmp_arr[0]['url'];
                     array_push($arr, $row);
                 }
                 $ret_json['success'] = true;
@@ -34,21 +37,26 @@ if ( $method && ( $method=='GET' || $method=='POST') ) {
                 $project_name = $post['project_name'];
                 $project_describe = $post['project_describe'];
                 // $date = $post['date'];
-                $date = time();
+                $date = date('Y-m-d H:i:s');
                 $group_number = $post['group_number'];
                 $group_number_now = $post['group_number_now'];
                 $group_describe = $post['group_describe'];
-                $process_id = $post['process_id'];
+                $progress_id = $post['progress_id'];
                 $sql = 'insert into projects values(0, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)';
+                $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 try {
                     $db->beginTransaction();
                     $stmt = $db->prepare($sql);
-                    $ret = $stmt->excute(array($user_id, $project_name, $project_describe, $date, $group_number, $group_number_now, $group_describe, $process_id));
+                    $ret = $stmt->execute(array($user_id, $project_name, $project_describe, $date, $group_number, $group_number_now, $group_describe, $progress_id));
                     $db->commit();
                     if ($ret) {
                         $ret_json['success'] = true;
                         $ret_json['msg'] = 'add project successful';
-                        $ret_json['project_id'] = $db->lastInsertId();
+                        # get last insert id
+                        $stmt = $db->query("SELECT LAST_INSERT_ID()");
+                        $lastId = $stmt->fetch(PDO::FETCH_NUM);
+                        $lastId = $lastId[0];
+                        $ret_json['item_id'] = $lastId;
                     } else {
                         $ret_json['err'] = 'add project failed';
                     }
